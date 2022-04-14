@@ -1,6 +1,13 @@
 package com.github.hcsp.course.dao;
 
-import org.springframework.data.repository.CrudRepository;
+import com.github.hcsp.course.model.Status;
+import com.github.hcsp.course.model.Users;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
-public interface UserRepository extends CrudRepository {
+import java.util.List;
+
+public interface UserRepository extends JpaRepository<Users, Integer> {
+    @Query(value = "select * from users where id <> 2", nativeQuery = true)
+    List<Users> findUserWhoseIdNotEqual2();
 }

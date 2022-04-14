@@ -1,31 +1,23 @@
 package com.github.hcsp.course.model;
 
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-import javax.xml.crypto.Data;
-import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
-public class Users {
-    private Integer id;
+@EntityListeners(AuditingEntityListener.class)
+public class Users extends BaseEntity {
     private String username;
     private String encryptedPassword;
-    private Date createdAt;
-    private Date updatedAt;
-    private Status status;
-
-    @Id
-    @Column(name = "id")
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     @Column(name = "username")
     public String getUsername() {
@@ -45,30 +37,19 @@ public class Users {
         this.encryptedPassword = encryptedPassword;
     }
 
-    @Column(name = "created_at")
-    public Date getCreatedAt() {
-        return createdAt;
+    private List<Role> roles;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_role",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    public List<Role> getRoles() {
+        return roles;
     }
 
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    @Column(name = "updatad_at")
-    public Date getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    @Column(name = "status")
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
     }
 }
