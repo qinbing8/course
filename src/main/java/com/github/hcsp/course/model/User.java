@@ -15,7 +15,7 @@ import java.util.List;
 @Entity
 @Table(name = "users")
 @EntityListeners(AuditingEntityListener.class)
-public class Users extends BaseEntity {
+public class User extends BaseEntity {
     private String username;
     private String encryptedPassword;
 
