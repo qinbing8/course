@@ -1,5 +1,6 @@
 package com.github.hcsp.course.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.Column;
@@ -29,6 +30,7 @@ public class User extends BaseEntity {
     }
 
     @Column(name = "encrypted_password")
+    @JsonIgnore
     public String getEncryptedPassword() {
         return encryptedPassword;
     }

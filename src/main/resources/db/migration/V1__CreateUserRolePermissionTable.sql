@@ -31,9 +31,9 @@ CREATE TABLE user_role
     status     VARCHAR(10) NOT NULL DEFAULT 'OK'
 );
 
-INSERT INTO user(username, encrypted_password)values ('Student1', '');
-INSERT INTO user(username, encrypted_password)values ('Teacher2', '');
-INSERT INTO user(username, encrypted_password)values ('Admin3', '');
+INSERT INTO users(username, encrypted_password)values ('Student1', '');
+INSERT INTO users(username, encrypted_password)values ('Teacher2', '');
+INSERT INTO users(username, encrypted_password)values ('Admin3', '');
 INSERT INTO user_role(user_id, role_id)values (1, 1);
 INSERT INTO user_role(user_id, role_id)values (2, 2);
 INSERT INTO user_role(user_id, role_id)values (3, 3);

@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface UserRepository extends JpaRepository<User, Integer> {
-    @Query(value = "select * from users where id <> 2", nativeQuery = true)
-    List<User> findUserWhoseIdNotEqual2();
+    //@Query("SELECT u FROM User u where u.username = ?1 and u.encryptedPassword = ?2")
+    User findUsersByUsername(String username);
 }
