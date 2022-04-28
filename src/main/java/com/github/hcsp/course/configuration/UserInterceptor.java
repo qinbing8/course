@@ -6,9 +6,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class UserInterceptor implements HandlerInterceptor {
     public static final String COOKIE_NAME = "COURSE_APP_SESSION_ID";
@@ -20,7 +17,6 @@ public class UserInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-
         Config.getCookie(request)
                 .flatMap(sessionDao::findByCookie)
                 .map(Session::getUser)

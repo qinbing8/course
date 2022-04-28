@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface UserRepository extends JpaRepository<User, Integer> {
+public interface UserDao extends JpaRepository<User, Integer> {
     //@Query("SELECT u FROM User u where u.username = ?1 and u.encryptedPassword = ?2")
     User findUsersByUsername(String username);
 }

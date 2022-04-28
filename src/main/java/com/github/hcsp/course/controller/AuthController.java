@@ -2,12 +2,16 @@ package com.github.hcsp.course.controller;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import com.github.hcsp.course.configuration.Config;
-import com.github.hcsp.course.dao.UserRepository;
+import com.github.hcsp.course.dao.SessionDao;
+import com.github.hcsp.course.dao.UserDao;
 import com.github.hcsp.course.model.HttpException;
 import com.github.hcsp.course.model.Session;
 import com.github.hcsp.course.model.User;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,7 +19,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.Transactional;
 import java.util.UUID;
 
 import static com.github.hcsp.course.configuration.UserInterceptor.COOKIE_NAME;
@@ -25,7 +31,9 @@ import static com.github.hcsp.course.configuration.UserInterceptor.COOKIE_NAME;
 public class AuthController {
     private BCrypt.Verifyer verifyer = BCrypt.verifyer();
     @Autowired
-    UserRepository userRepository;
+    UserDao userDao;
+    @Autowired
+    SessionDao sessionDao;
 
     /**
      * @api {get} /api/v1/session 检查登录状态
@@ -127,31 +135,114 @@ public class AuthController {
         user.setUsername(username);
         user.setEncryptedPassword(BCrypt.withDefaults().hashToString(12, password.toCharArray()));
         try {
-            userRepository.save(user);
+            userDao.save(user);
         } catch (Throwable e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-            //throw new HttpException(409, "用户们已经被注册");
+            if (e.getCause() instanceof ConstraintViolationException && "23505".equals(((ConstraintViolationException) e.getCause()).getSQLState())) {
+                throw new HttpException(409, "用户名已经被注册");
+            }else{
+                throw new RuntimeException(e);
+            }
         }
         response.setStatus(201);
         return user;
     }
 
+    /**
+     * @api {post} /api/v1/session 登录
+     * @apiName 登录
+     * @apiGroup 登录与鉴权
+     *
+     * @apiHeader {String} Accept application/json
+     * @apiHeader {String} Content-Type application/x-www-form-urlencoded
+     *
+     * @apiParam {String} username 用户名
+     * @apiParam {String} password 密码
+     * @apiParamExample Request-Example:
+     *          username: Alice
+     *          password: MySecretPassword
+     *
+     * @apiSuccessExample Success-Response:
+     *     HTTP/1.1 201 Created
+     *     {
+     *       "user": {
+     *           "id": 123,
+     *           "username": "Alice"
+     *       }
+     *     }
+     *
+     * @apiError 400 Bad Request 若用户的请求包含错误
+     *
+     * @apiErrorExample Error-Response:
+     *     HTTP/1.1 400 Bad Request
+     *     {
+     *       "message": "Bad Request"
+     *     }
+     */
+    /**
+     * @param username 用户名
+     * @param password 密码
+     */
     @PostMapping("/session")
     public User login(@RequestParam("username") String username,
                       @RequestParam("password") String password,
                       HttpServletResponse response) {
-        User user = userRepository.findUsersByUsername(username);
+        User user = userDao.findUsersByUsername(username);
         if (user == null) {
             throw new HttpException(401, "登录失败！");
         } else {
             if (verifyer.verify(password.toCharArray(), user.getEncryptedPassword()).verified) {
                 String cookie = UUID.randomUUID().toString();
+
+                Session session = new Session();
+                session.setCookie(cookie);
+                session.setUser(user);
+                sessionDao.save(session);
+
                 response.addCookie(new Cookie(COOKIE_NAME, cookie));
                 return user;
             } else {
                 throw new HttpException(401, "登录失败！");
             }
         }
+    }
+
+    /**
+     * @api {delete} /api/v1/session 登出
+     * @apiName 登出
+     * @apiGroup 登录与鉴权
+     *
+     * @apiHeader {String} Accept application/json
+     *
+     * @apiParamExample Request-Example:
+     *            DELETE /api/v1/session
+     *
+     * @apiSuccessExample Success-Response:
+     *     HTTP/1.1 204 No Content
+     * @apiError 401 Unauthorized 若用户未登录
+     *
+     * @apiErrorExample Error-Response:
+     *     HTTP/1.1 401 Unauthorized
+     *     {
+     *       "message": "Unauthorized"
+     *     }
+     */
+    /**
+     * @param response Http response
+     */
+    @DeleteMapping("/session")
+    @Transactional
+    public void logout(HttpServletRequest request,
+                       HttpServletResponse response) {
+        if (Config.UserContext.getCurrentUser() == null) {
+            throw new HttpException(401, "Unauthorized");
+        }
+
+        Config.getCookie(request).ifPresent(sessionDao::deleteByCookie);
+
+        Cookie cookie = new Cookie(COOKIE_NAME, "");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+        response.setStatus(204);
+
     }
 }
