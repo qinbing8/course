@@ -158,6 +158,17 @@ public class AuthIntegrationTest {
                 usernameAndPassword);
         // 失败
         assertEquals(409, response.statusCode());
+    }
 
+    @Test
+    public void onlyAdminCanSeeAllUsers() throws IOException, InterruptedException {
+        HttpResponse<String> response = get("/admin/users", "COURSE_APP_SESSION_ID=test_user_3");
+        assertEquals(200, response.statusCode());
+    }
+
+    @Test
+    public void notAdminCanNotSeeAllUsers() throws IOException, InterruptedException {
+        HttpResponse<String> response = get("/admin/users", "COURSE_APP_SESSION_ID=test_user_1");
+        assertEquals(403, response.statusCode());
     }
 }
