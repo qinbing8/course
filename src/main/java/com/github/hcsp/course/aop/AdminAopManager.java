@@ -13,8 +13,10 @@ import org.springframework.context.annotation.Configuration;
 public class AdminAopManager {
     @Around("@annotation(com.github.hcsp.course.annotation.Admin)")
     public Object checkPermission(ProceedingJoinPoint joinPoint) throws Throwable {
-        User user = Config.UserContext.getCurrentUser();
-        if (user.getRoles().stream().anyMatch(role -> "管理员".equals(role.getName()))) {
+        User currentUser = Config.UserContext.getCurrentUser();
+        if (currentUser == null) {
+            throw new HttpException(401, "没有登录！");
+        } else if (currentUser.getRoles().stream().anyMatch(role -> "管理员".equals(role.getName()))) {
             // 检查当前登录用户是不是管理员
             // 如果是管理员，允许通过
             return joinPoint.proceed();

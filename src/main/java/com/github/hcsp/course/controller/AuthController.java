@@ -246,12 +246,4 @@ public class AuthController {
         response.addCookie(cookie);
         response.setStatus(204);
     }
-
-    @Autowired
-    UserRoleManagerService userRoleManagerService;
-
-    @RequestMapping("/admin/users")
-    public List<User> getAllUsers() {
-        return userRoleManagerService.getAllUsers();
-    }
 }

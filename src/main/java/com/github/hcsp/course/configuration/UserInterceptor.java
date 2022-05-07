@@ -17,6 +17,7 @@ public class UserInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // 从数据库根据cookie取出用户信息，并放到当前的线程上下文里
         Config.getCookie(request)
                 .flatMap(sessionDao::findByCookie)
                 .map(Session::getUser)
